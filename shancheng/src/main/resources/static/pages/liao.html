@@ -1,0 +1,139 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <!-- 页面meta -->
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <title></title>
+
+    <meta content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no" name="viewport">
+    <!-- 引入样式 -->
+    <link rel="stylesheet" href="../plugins/elementui/index.css">
+    <link rel="stylesheet" href="../plugins/font-awesome/css/font-awesome.min.css">
+    <link rel="stylesheet" href="../css/style.css">
+
+</head>
+<body class="hold-transition">
+<div style="width:80%;margin:20px auto;background-color:white;    border-radius: 5px; border: 1px solid gainsboro" id="app">
+    <h2 style="color:aqua;text-align: left;">交流</h2>
+    <hr style="margin-top: 10px;border: 0.5px solid whitesmoke"/>
+
+    <div style="width: 50%;margin: 50px auto">
+
+        <div style="margin-top: 10px;margin-bottom: 20px;color: aquamarine" v-html="content1" >
+
+        </div>
+        <el-input placeholder="内容" style="width: 300px;" class="filter-item" v-model="content" ></el-input>
+        <el-button type="primary" class="butT" @click="fa()">发送</el-button>
+
+
+    </div>
+</div>
+
+
+</body>
+<!-- 引入组件库 -->
+<script src="../js/vue.js"></script>
+<script src="../plugins/elementui/index.js"></script>
+<script type="text/javascript" src="../js/jquery.min.js"></script>
+<script src="../js/axios-0.18.0.js"></script>
+<script>
+
+    var vue = new Vue({
+        el: '#app',
+        data:{
+
+            userId:null,
+            userId1:null,
+
+            content:"",
+            content1:"",
+            userName:""
+        },
+        //钩子函数，VUE对象初始化完成后自动执行
+        created(){
+            this.findPage();
+            let timer = setInterval(() => {
+                this.findPage();
+            },100)
+
+        },
+        methods:{
+
+
+
+            // 弹出添加窗口
+            handleCreate(val) {
+                this.isShow=true;
+                this.userId1=val;
+
+
+                let form={"one":this.userId,"two":this.userId1};
+
+                axios.post("/liaotian/Select",form).then((response)=> {
+
+                    this.content1=response.data;
+                }).finally(()=> {
+
+                });
+            },
+
+            findPage() {
+                this.userId1=localStorage.getItem("userId1");
+
+
+                this.userId=localStorage.getItem("userId");
+
+                this.userName= localStorage.getItem("username");
+
+
+
+
+                let form={"one":this.userId,"two":this.userId1};
+
+                axios.post("/liaotian/Select",form).then((response)=> {
+
+                    this.content1=response.data;
+                }).finally(()=> {
+
+                });
+            },
+            fa()
+            {
+                this.content="<div style=\"margin-top: 10px\">"+this.userName+"说:"+this.content+"</div>";
+                let form={"one":this.userId,"two":this.userId1,"content":this.content};
+
+                axios.post("/liaotian/Save",form).then((response)=> {
+
+                    this.$message({
+                        message: "发送成功",
+                        type: 'success'
+                    });
+                }).finally(()=> {
+                    this.content="";
+                    let form={"one":this.userId,"two":this.userId1};
+
+                    axios.post("/liaotian/Select",form).then((response)=> {
+
+                        this.content1=response.data;
+                    }).finally(()=> {
+
+                    });
+                });
+
+            },
+            shua()
+            {
+                let form={"one":this.userId,"two":this.userId1};
+
+                axios.post("/liaotian/Select",form).then((response)=> {
+
+                    this.content1=response.data;
+                }).finally(()=> {
+
+                });
+            }
+        }
+    })
+</script>
+</html>

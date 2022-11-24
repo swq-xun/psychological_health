@@ -1,0 +1,136 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, shrink-to-fit=no" name="viewport">
+    <title>登录</title>
+
+    <link rel="stylesheet" href="../dist/modules/bootstrap/css/bootstrap.min.css">
+    <link rel="stylesheet" href="../dist/modules/ionicons/css/ionicons.min.css">
+    <link rel="stylesheet" href="../dist/modules/fontawesome/web-fonts-with-css/css/fontawesome-all.min.css">
+
+    <link rel="stylesheet" href="../dist/css/demo.css">
+    <link rel="stylesheet" href="../dist/css/style.css">
+    <!-- 引入样式 -->
+    <link rel="stylesheet" href="../plugins/elementui/index.css" type="text/css">
+    <link rel="stylesheet" href="../plugins/font-awesome/css/font-awesome.min.css" type="text/css">
+    <link rel="stylesheet" href="../css/style.css" type="text/css">
+
+    <!-- 引入组件库 -->
+    <script src="../js/vue.js"></script>
+    <script src="../plugins/elementui/index.js"></script>
+    <script type="text/javascript" src="../js/jquery.min.js"></script>
+    <script src="../js/axios-0.18.0.js"></script>
+</head>
+
+<body>
+<div id="app">
+    <section class="section">
+        <div class="container mt-5">
+            <div class="row">
+                <div class="col-12 col-sm-8 offset-sm-2 col-md-6 offset-md-3 col-lg-6 offset-lg-3 col-xl-4 offset-xl-4">
+                    <div class="login-brand">
+                        心理测评
+                    </div>
+
+                    <div class="card card-primary">
+                        <div class="card-header"><h4>登录</h4></div>
+
+                        <div class="card-body">
+                            <div  class="needs-validation" novalidate="">
+                                <div class="form-group">
+                                    <label for="name">账号</label>
+                                    <input id="name" type="text" class="form-control" v-model="username"  tabindex="1" required autofocus>
+                                    <div class="invalid-feedback">
+                                        Please fill in your email
+                                    </div>
+                                </div>
+
+                                <div class="form-group">
+                                    <label for="password" class="d-block">密码
+
+                                    </label>
+                                    <input id="password" type="password" class="form-control"   v-model="password"  tabindex="2" required>
+                                    <div class="invalid-feedback">
+                                        please fill in your password
+                                    </div>
+                                </div>
+
+
+
+                                <div class="form-group">
+                                    <button  class="btn btn-primary btn-block" tabindex="4"  @click="add()">
+                                        登录
+                                    </button>
+                                    <label for="password" class="d-block">
+                                        <div class="float-right">
+                                            <a href="regist.html">
+                                                前往注册?
+                                            </a>
+                                        </div>
+                                    </label>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                </div>
+            </div>
+        </div>
+    </section>
+</div>
+
+
+</body>
+</html>
+
+<script>
+
+
+    var vue = new Vue({
+        el: '#app',
+        data: {
+            username:"",
+            password:"",
+            formData:{},
+            rules: {//校验规则
+                username: [{ required: true, message: '用户名为必填项', trigger: 'blur' }],
+                password: [{ required: true, message: '密码为必填项', trigger: 'blur' }],
+                idCard: [{ required: true, message: '身份证必填项', trigger: 'blur' }],
+            },
+        }
+        ,methods:{
+            add()
+            {
+                if(this.username.trim()==""||this.password.trim()=="")
+                {
+                     alert("请输入用户名和密码");
+                     return
+                }
+                $.ajax({
+                    url:"/login",
+                    type:"POST",
+                    async:false,
+                    dataType:"json",
+                    data:{
+                        username:this.username,
+                        password:this.password
+                    },
+                    success: function (res) {
+                        if(res=="登录成功")
+                        {
+                            window.location.href="main.html";
+                            return;
+                        }
+                        else
+                        {
+                            alert("用户名或者密码错误");
+
+                        }
+                    }
+                })
+            }
+        }
+
+    });
+</script>

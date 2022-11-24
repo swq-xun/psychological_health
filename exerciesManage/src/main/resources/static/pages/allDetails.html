@@ -1,0 +1,224 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <!-- 页面meta -->
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <title>心理测评系统</title>
+
+    <meta content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no" name="viewport">
+    <!-- 引入样式 -->
+    <link rel="stylesheet" href="../plugins/elementui/index.css">
+    <link rel="stylesheet" href="../plugins/font-awesome/css/font-awesome.min.css">
+    <link rel="stylesheet" href="../css/style.css">
+</head>
+<body class="hold-transition">
+<div id="app">
+    <div class="content-header">
+        <h1>用户模块<small>测试详情</small></h1>
+        <el-breadcrumb separator-class="el-icon-arrow-right" class="breadcrumb">
+            <el-breadcrumb-item :to="{ path: '/' }">首页</el-breadcrumb-item>
+            <el-breadcrumb-item>用户模块</el-breadcrumb-item>
+            <el-breadcrumb-item>测试详情</el-breadcrumb-item>
+        </el-breadcrumb>
+    </div>
+    <div class="app-container">
+        <div class="box">
+            <div style="width: 80%;margin: 0 auto">
+                <div v-for="item in dataList">
+                    <h3><span>{{item.xuhao}}:</span>{{item.them}}</h3>
+                    <el-radio-group v-model="item.da" >
+                        <el-radio :label="item.one">A:{{item.one}}</el-radio>
+                        <el-radio :label="item.two">B:{{item.two}}</el-radio>
+                        <el-radio :label="item.three">C:{{item.three}}</el-radio>
+                        <el-radio :label="item.four">D:{{item.four}}</el-radio>
+                    </el-radio-group>
+                    <div style="margin-top: 30px">
+                        <span>得分:</span><span>{{item.fen}}分</span><span style="margin-left: 10px">正确答案:</span><span>{{item.ok}}</span>
+
+                        <span style="margin-left: 10px">
+                            <span>正确性:</span>
+                            <img src="../img/错误.svg" v-if="item.fen==0" style="width: 20px">
+                               <img src="../img/正确.svg" v-else style="width: 20px">
+                        </span>
+
+                    </div>
+                    <hr>
+                </div>
+
+            </div>
+        </div>
+    </div>
+</div>
+
+</body>
+<!-- 引入组件库 -->
+<script src="../js/vue.js"></script>
+<script src="../plugins/elementui/index.js"></script>
+<script type="text/javascript" src="../js/jquery.min.js"></script>
+<script src="../js/axios-0.18.0.js"></script>
+<script>
+
+    var vue = new Vue({
+        el: '#app',
+        data:{
+            pagination: {//分页相关模型数据
+                currentPage: 1,//当前页码
+                pageSize:10,//每页显示的记录数
+                total:0,//总记录数
+                queryString:""//查询条件
+            },
+            dataList: [],//当前页要展示的分页列表数据
+            formData: {},//表单数据
+            dialogFormVisible: false,//增加表单是否可见
+            dialogFormVisible4Edit:false,//编辑表单是否可见
+            rules: {//校验规则
+                xuhao: [{ required: true, message: '题号为必填项', trigger: 'blur' }],
+                them: [{ required: true, message: '题目为必填项', trigger: 'blur' }],
+                one:[{ required: true, message: '选项A为必填项', trigger: 'blur' }],
+                two:[{ required: true, message: '选项B为必填项', trigger: 'blur' }],
+                three:[{ required: true, message: '选项C为必填项', trigger: 'blur' }],
+                four:[{ required: true, message: '选项D为必填项', trigger: 'blur' }],
+                ok:[{ required: true, message: '正确答案为必填项', trigger: 'blur' }],
+            },
+            options: [{
+                value: 1,
+                label: '用户'
+            },
+                {
+                    value: 0,
+                    label: '管理员'
+                }]
+        },
+        //钩子函数，VUE对象初始化完成后自动执行
+        created(){
+            this.findPage();
+        },
+        methods:{
+
+            //编辑
+            handleEdit() {
+                //表单校验
+                this.$refs['dataEditForm'].validate((valid)=>{
+                    if(valid){
+                        //表单校验通过，发送请求
+                        axios.put("/timu/Update",this.formData).then((response)=> {
+
+                            this.dialogFormVisible4Edit = false;
+
+
+                            this.$message({
+                                message: "修改成功",
+                                type: 'success'
+                            });
+
+                        }).finally(()=> {
+                            //重新发送请求查询分页数据
+                            this.findPage();
+                        });
+                    }else{
+                        //表单校验失败
+                        this.$message.error("表单数据校验失败");
+                        return false;
+                    }
+                });
+            },
+            //添加
+            handleAdd () {
+                let ji=0;
+                let userId=localStorage.getItem("userId");
+                this.dataList.forEach(function (e) {
+
+                    if(e.da==null)
+                    {
+
+                        ji++;
+                    }
+                });
+                if(ji>0)
+                {
+                    this.$message.error("还存在未填写的题目");
+                }
+                else
+                {
+                    this.dataList.forEach(function (e) {
+                        e.userId=userId;
+                    })
+                    //表单数据校验通过，发送ajax请求将表单数据提交到后台
+                    axios.post("/ut/Save",this.dataList).then((response)=> {
+                        //隐藏新增窗口
+                        this.dialogFormVisible = false;
+                        this.$message({
+                            message: "答题成功",
+                            type: 'success'
+                        });
+                    }).finally(()=> {
+                        // this.findPage();
+                    });
+                }
+
+            },
+            // 重置表单
+            resetForm() {
+                this.formData = {};
+            },
+            // 弹出添加窗口
+            handleCreate() {
+                this.resetForm();
+                this.dialogFormVisible = true;
+            },
+            // 弹出编辑窗口
+            handleUpdate(row) {
+                //发送请求获取检查项信息
+                axios.get("/timu/findById/" + row.id).then((res)=>{
+                    //设置编辑窗口属性，dialogFormVisible4Edit为true表示显示
+                    this.dialogFormVisible4Edit = true;
+                    //为模型数据设置值，基于VUE双向数据绑定回显到页面
+                    this.formData = res.data;
+
+                });
+            },
+            //切换页码
+            handleCurrentChange(currentPage) {
+                //currentPage为切换后的页码
+                this.pagination.currentPage = currentPage;
+                this.findPage();
+            },
+            //切换每页显示条数
+            handleSizeChange(pageSize){
+                this.pagination.pageSize =pageSize;
+                this.findPage();
+            },
+            // 删除
+            handleDelete(row) {
+                //alert(row.id);
+                this.$confirm("确认删除吗？","提示",{type:'warning'}).then(()=>{
+                    //点击确定按钮时只需此处代码
+                    //alert('用户点击的是确定按钮');
+                    axios.delete("/timu/Delete/" + row.id).then((res)=> {
+                        this.$message({
+                            message: "删除成功",
+                            type: 'success'
+                        });
+                        //调用分页，获取最新分页数据
+                        this.findPage();
+
+                    });
+                });
+            },
+            //分页查询
+            findPage() {
+            let biaoshi=localStorage.getItem("biaoshi");
+
+                axios.get("/ut/selectDetails/"+biaoshi).then((response)=> {
+                    this.dataList = response.data;
+
+
+
+                });
+            },
+
+        }
+    })
+</script>
+</html>

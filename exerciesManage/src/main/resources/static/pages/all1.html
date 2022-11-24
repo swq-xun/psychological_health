@@ -1,0 +1,226 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <!-- 页面meta -->
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <title></title>
+
+    <meta content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no" name="viewport">
+    <!-- 引入样式 -->
+    <link rel="stylesheet" href="../plugins/elementui/index.css">
+    <link rel="stylesheet" href="../plugins/font-awesome/css/font-awesome.min.css">
+    <link rel="stylesheet" href="../css/style.css">
+</head>
+<body class="hold-transition">
+<div id="app">
+    <div class="content-header">
+        <h1>管理员模块<small>评测成绩</small></h1>
+        <el-breadcrumb separator-class="el-icon-arrow-right" class="breadcrumb">
+            <el-breadcrumb-item :to="{ path: '/' }">首页</el-breadcrumb-item>
+            <el-breadcrumb-item>管理员模块</el-breadcrumb-item>
+            <el-breadcrumb-item>评测成绩</el-breadcrumb-item>
+        </el-breadcrumb>
+    </div>
+    <div class="app-container">
+        <div class="box">
+            <div class="filter-container">
+
+            </div>
+            <el-table size="small" current-row-key="id" :data="dataList" stripe highlight-current-row>
+                <el-table-column type="index" align="center" label="序号"></el-table-column>
+                <el-table-column prop="userId" label="userId" align="center"></el-table-column>
+                <el-table-column prop="username" label="用户名" align="center"></el-table-column>
+                <el-table-column prop="biaoshi" label="标识" align="center"></el-table-column>
+                <el-table-column prop="fen" label="分数" align="center"></el-table-column>
+                <el-table-column prop="guo" label="结果" align="center"></el-table-column>
+
+                <el-table-column label="操作" align="center">
+                    <template slot-scope="scope">
+                        <el-button type="primary" size="mini" @click="handleUpdate(scope.row)">详情</el-button>
+
+
+                    </template>
+                </el-table-column>
+            </el-table>
+
+        </div>
+    </div>
+</div>
+
+</body>
+<!-- 引入组件库 -->
+<script src="../js/vue.js"></script>
+<script src="../plugins/elementui/index.js"></script>
+<script type="text/javascript" src="../js/jquery.min.js"></script>
+<script src="../js/axios-0.18.0.js"></script>
+<script>
+
+    var vue = new Vue({
+        el: '#app',
+        data:{
+            pagination: {//分页相关模型数据
+                currentPage: 1,//当前页码
+                pageSize:10,//每页显示的记录数
+                total:0,//总记录数
+                queryString:""//查询条件
+            },
+            dataList: [],//当前页要展示的分页列表数据
+            formData: {},//表单数据
+            dialogFormVisible: false,//增加表单是否可见
+            dialogFormVisible4Edit:false,//编辑表单是否可见
+            rules: {//校验规则
+                username: [{ required: true, message: '用户名为必填项', trigger: 'blur' }],
+                password: [{ required: true, message: '密码为必填项', trigger: 'blur' }],
+                type:[{ required: true, message: '角色为必选项', trigger: 'blur' }],
+                idCard:[{ required: true, message: '身份证号必填项', trigger: 'blur' }]
+            },
+            options: [{
+                value: 1,
+                label: '用户'
+            },
+                {
+                    value: 0,
+                    label: '管理员'
+                }]
+        },
+        //钩子函数，VUE对象初始化完成后自动执行
+        created(){
+            this.findPage();
+        },
+        methods:{
+
+            //编辑
+            handleEdit() {
+                //表单校验
+                this.$refs['dataEditForm'].validate((valid)=>{
+                    if(valid){
+                        //表单校验通过，发送请求
+                        axios.put("/user/Update",this.formData).then((response)=> {
+
+                            this.dialogFormVisible4Edit = false;
+
+
+                            this.$message({
+                                message: "修改成功",
+                                type: 'success'
+                            });
+
+                        }).finally(()=> {
+                            //重新发送请求查询分页数据
+                            this.findPage();
+                        });
+                    }else{
+                        //表单校验失败
+                        this.$message.error("表单数据校验失败");
+                        return false;
+                    }
+                });
+            },
+            //添加
+            handleAdd () {
+                //校验表单输入项是否合法
+                this.$refs['dataAddForm'].validate((valid) => {
+                    if (valid) {
+                        this.formData.status="拉黑";
+                        //表单数据校验通过，发送ajax请求将表单数据提交到后台
+                        axios.post("/user/Save",this.formData).then((response)=> {
+                            //隐藏新增窗口
+                            this.dialogFormVisible = false;
+                            this.$message({
+                                message: "添加成功",
+                                type: 'success'
+                            });
+                        }).finally(()=> {
+                            this.findPage();
+                        });
+                    } else {
+                        this.$message.error("表单数据校验失败");
+                        return false;
+                    }
+                });
+            },
+            // 重置表单
+            resetForm() {
+                this.formData = {};
+            },
+            // 弹出添加窗口
+            handleCreate() {
+                this.resetForm();
+                this.dialogFormVisible = true;
+            },
+            // 弹出编辑窗口
+            handleUpdate(row) {
+                localStorage.setItem("biaoshi",row.biaoshi);
+                window.parent.document.getElementById("f").src="allDetails.html";
+            },
+            //切换页码
+            handleCurrentChange(currentPage) {
+                //currentPage为切换后的页码
+                this.pagination.currentPage = currentPage;
+                this.findPage();
+            },
+            //切换每页显示条数
+            handleSizeChange(pageSize){
+                this.pagination.pageSize =pageSize;
+                this.findPage();
+            },
+            // 删除
+            handleDelete(row) {
+                //alert(row.id);
+                this.$confirm("确认删除吗？","提示",{type:'warning'}).then(()=>{
+                    //点击确定按钮时只需此处代码
+                    //alert('用户点击的是确定按钮');
+                    axios.delete("/user/Delete/" + row.id).then((res)=> {
+                        this.$message({
+                            message: "删除成功",
+                            type: 'success'
+                        });
+                        //调用分页，获取最新分页数据
+                        this.findPage();
+
+                    });
+                });
+            },
+            //分页查询
+            findPage() {
+
+
+                axios.get("/ut/selectAll1").then((response)=> {
+                    this.dataList = response.data;
+
+
+                });
+            },
+            c(row)
+            {
+
+                axios.get("/user/findById/" + row.id).then((res)=>{
+                    this.formData=res.data;
+                    if(this.formData.status=="拉黑")
+                    {
+                        this.formData.status="已拉黑"
+                    }
+                    else
+                    {
+                        this.formData.status="拉黑"
+                    }
+                    axios.put("/user/Update",this.formData).then((response)=> {
+
+
+
+
+
+
+                    }).finally(()=> {
+                        //重新发送请求查询分页数据
+                        this.findPage();
+                    });
+
+                });
+
+            }
+        }
+    })
+</script>
+</html>
